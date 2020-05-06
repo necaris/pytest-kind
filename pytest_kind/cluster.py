@@ -9,7 +9,7 @@ import sys
 import time
 import yaml
 from contextlib import contextmanager
-from typing import Generator, Union
+from typing import Generator, Optional, Union
 
 from pathlib import Path
 
@@ -19,8 +19,9 @@ KUBECTL_VERSION = "v1.18.2"
 
 
 class KindCluster:
-    def __init__(self, name: str):
+    def __init__(self, name: str, kubeconfig: Optional[Path] = None):
         self.name = name
+        self.kubeconfig = kubeconfig
         path = Path(".pytest-kind")
         self.path = path / name
         self.path.mkdir(parents=True, exist_ok=True)
@@ -92,15 +93,18 @@ class KindCluster:
                 subprocess.run(create_cmd, check=True)
                 cluster_exists = True
 
-            self.kubeconfig_path = self.path / f"kind-config-{self.name}"
-            kubeconfig = subprocess.check_output(
-                [str(self.kind_path), "get", "kubeconfig", f"--name={self.name}"],
-                encoding="utf-8",
-            )
-            parsed = yaml.safe_load(kubeconfig)
-            assert parsed["kind"] == "Config"
+            if self.kubeconfig:
+                self.kubeconfig_path = self.kubeconfig
+            else:
+                self.kubeconfig_path = self.path / f"kind-config-{self.name}"
+                kubeconfig = subprocess.check_output(
+                    [str(self.kind_path), "get", "kubeconfig", f"--name={self.name}"],
+                    encoding="utf-8",
+                )
+                parsed = yaml.safe_load(kubeconfig)
+                assert parsed["kind"] == "Config"
 
-            self.kubeconfig_path.write_text(kubeconfig)
+                self.kubeconfig_path.write_text(kubeconfig)
 
             if not self.kubeconfig_path.exists():
                 self.delete()
