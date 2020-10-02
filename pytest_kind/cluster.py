@@ -14,8 +14,8 @@ from typing import Generator, Optional, Union
 from pathlib import Path
 
 
-KIND_VERSION = "v0.8.1"
-KUBECTL_VERSION = "v1.18.2"
+KIND_VERSION = "v0.9.0"
+KUBECTL_VERSION = "v1.19.1"
 
 
 class KindCluster:
