@@ -85,12 +85,11 @@ class KindCluster:
                     "create",
                     "cluster",
                     f"--name={self.name}",
+                    f"--kubeconfig={self.kubeconfig_path}",
                 ]
 
                 if config_file:
                     create_cmd += ["--config", str(config_file)]
-
-                create_cmd += ["--kubeconfig", str(self.kubeconfig_path)]
 
                 logging.info(f"Creating cluster {self.name}..")
                 subprocess.run(create_cmd, check=True)
@@ -182,6 +181,12 @@ class KindCluster:
         """Delete the kind cluster ("kind delete cluster")"""
         logging.info(f"Deleting cluster {self.name}..")
         subprocess.run(
-            [str(self.kind_path), "delete", "cluster", f"--name={self.name}"],
+            [
+                str(self.kind_path),
+                "delete",
+                "cluster",
+                f"--name={self.name}",
+                f"--kubeconfig={self.kubeconfig_path}",
+            ],
             check=True,
         )
