@@ -7,7 +7,6 @@ import socket
 import subprocess
 import sys
 import time
-import yaml
 from contextlib import contextmanager
 from typing import Generator, Optional, Union
 
