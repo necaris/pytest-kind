@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 KIND_VERSION = "v0.9.0"
-KUBECTL_VERSION = "v1.19.1"
+KUBECTL_VERSION = "v1.20.1"
 
 
 class KindCluster:
