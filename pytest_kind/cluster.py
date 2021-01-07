@@ -21,12 +21,12 @@ KUBECTL_VERSION = "v1.19.1"
 class KindCluster:
     def __init__(self, name: str, kubeconfig: Optional[Path] = None):
         self.name = name
-        self.kubeconfig = kubeconfig
         path = Path(".pytest-kind")
         self.path = path / name
         self.path.mkdir(parents=True, exist_ok=True)
         self.kind_path = self.path / "kind"
         self.kubectl_path = self.path / "kubectl"
+        self.kubeconfig_path = kubeconfig or (self.path / "kubeconfig")
 
     def ensure_kind(self):
         if not self.kind_path.exists():
@@ -68,6 +68,8 @@ class KindCluster:
         """Create the kind cluster if it does not exist (otherwise re-use)"""
         self.ensure_kind()
 
+        self.kubeconfig_path.touch(0o600, exist_ok=True)
+
         cluster_exists = False
 
         while not cluster_exists:
@@ -89,22 +91,11 @@ class KindCluster:
                 if config_file:
                     create_cmd += ["--config", str(config_file)]
 
+                create_cmd += ["--kubeconfig", str(self.kubeconfig_path)]
+
                 logging.info(f"Creating cluster {self.name}..")
                 subprocess.run(create_cmd, check=True)
                 cluster_exists = True
-
-            if self.kubeconfig:
-                self.kubeconfig_path = self.kubeconfig
-            else:
-                self.kubeconfig_path = self.path / f"kind-config-{self.name}"
-                kubeconfig = subprocess.check_output(
-                    [str(self.kind_path), "get", "kubeconfig", f"--name={self.name}"],
-                    encoding="utf-8",
-                )
-                parsed = yaml.safe_load(kubeconfig)
-                assert parsed["kind"] == "Config"
-
-                self.kubeconfig_path.write_text(kubeconfig)
 
             if not self.kubeconfig_path.exists():
                 self.delete()
