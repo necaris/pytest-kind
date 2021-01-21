@@ -10,7 +10,7 @@ import time
 from contextlib import contextmanager
 from typing import Generator, Optional, Union
 
-from pathlib import Path, PurePath
+from pathlib import Path
 
 
 KIND_VERSION = "v0.9.0"
@@ -19,13 +19,13 @@ KUBECTL_VERSION = "v1.20.1"
 
 class KindCluster:
     def __init__(
-            self,
-            name: str,
-            kubeconfig: Optional[Path] = None,
-            image: Optional[str] = None,
-            kind_path: Optional[Path] = None,
-            kubectl_path: Optional[Path] = None,
-        ):
+        self,
+        name: str,
+        kubeconfig: Optional[Path] = None,
+        image: Optional[str] = None,
+        kind_path: Optional[Path] = None,
+        kubectl_path: Optional[Path] = None,
+    ):
         self.name = name
         self.image = image
         path = Path(".pytest-kind")

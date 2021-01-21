@@ -50,7 +50,7 @@ def pytest_addoption(parser):
     group.addoption(
         "--kind-image",
         default=None,
-        action='store',
+        action="store",
         type=str,
         help=(
             "If provided, use the specified docker image "
@@ -60,7 +60,7 @@ def pytest_addoption(parser):
     group.addoption(
         "--kind-bin",
         default=None,
-        action='store',
+        action="store",
         type=str,
         help=(
             "If provided, use the specified kind binary instead of "
@@ -70,7 +70,7 @@ def pytest_addoption(parser):
     group.addoption(
         "--kind-kubectl-bin",
         default=None,
-        action='store',
+        action="store",
         type=str,
         help=(
             "If provided, use the specified kubectl binary instead of "
