@@ -1,20 +1,22 @@
 import logging
 import os
-import pykube
 import random
-import requests
 import socket
 import subprocess
 import sys
 import time
 from contextlib import contextmanager
-from typing import Generator, Optional, Union
-
 from pathlib import Path
+from typing import Generator
+from typing import Optional
+from typing import Union
+
+import pykube
+import requests
 
 
-KIND_VERSION = "v0.9.0"
-KUBECTL_VERSION = "v1.20.1"
+KIND_VERSION = "v0.10.0"
+KUBECTL_VERSION = "v1.20.2"
 
 
 class KindCluster:
@@ -72,7 +74,7 @@ class KindCluster:
             tmp_file.rename(self.kubectl_path)
 
     def create(self, config_file: Union[str, Path] = None):
-        """Create the kind cluster if it does not exist (otherwise re-use)"""
+        """Create the kind cluster if it does not exist (otherwise re-use)."""
         self.ensure_kind()
 
         self.kubeconfig_path.touch(0o600, exist_ok=True)
@@ -130,7 +132,7 @@ class KindCluster:
         )
 
     def kubectl(self, *args: str, **kwargs) -> str:
-        """Run a kubectl command against the cluster and return the output as string"""
+        """Run a kubectl command against the cluster and return the output as string."""
         self.ensure_kubectl()
         return subprocess.check_output(
             [str(self.kubectl_path), *args],
@@ -148,7 +150,7 @@ class KindCluster:
         local_port: int = None,
         retries: int = 10,
     ) -> Generator[int, None, None]:
-        """Run "kubectl port-forward" for the given service/pod and use a random local port"""
+        """Run "kubectl port-forward" for the given service/pod and use a random local port."""
         port_to_use: int
         proc = None
         for i in range(retries):
@@ -191,7 +193,7 @@ class KindCluster:
                 proc.kill()
 
     def delete(self):
-        """Delete the kind cluster ("kind delete cluster")"""
+        """Delete the kind cluster ("kind delete cluster")."""
         logging.info(f"Deleting cluster {self.name}..")
         subprocess.run(
             [

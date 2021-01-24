@@ -7,7 +7,7 @@ from .cluster import KindCluster
 
 @pytest.fixture(scope="session")
 def kind_cluster(request):
-    """Provide a Kubernetes kind cluster as test fixture"""
+    """Provide a Kubernetes kind cluster as test fixture."""
     name = request.config.getoption("cluster_name")
     keep = request.config.getoption("keep_cluster")
     kubeconfig = request.config.getoption("kubeconfig")
@@ -54,7 +54,7 @@ def pytest_addoption(parser):
         type=str,
         help=(
             "If provided, use the specified docker image "
-            "instead of the default one. (e.g. kindest/node:v1.19.1)"
+            "instead of the default one. (e.g. kindest/node:v1.20.2)"
         ),
     )
     group.addoption(

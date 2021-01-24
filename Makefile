@@ -4,9 +4,7 @@ install:
 
 .PHONY: lint
 lint: install
-	poetry run flake8
-	poetry run black --check pytest_kind
-	poetry run mypy --ignore-missing-imports pytest_kind
+	poetry run pre-commit run --all-files
 
 .PHONY: test
 test: lint
