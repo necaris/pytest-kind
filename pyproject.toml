@@ -7,7 +7,12 @@ license = "GPL-3.0+"
 readme = "README.md"
 repository = "https://codeberg.org/hjacobs/pytest-kind"
 classifiers = [
-    "Framework :: Pytest"
+    "Framework :: Pytest",
+    "Development Status :: 5 - Production/Stable",
+    "Topic :: Software Development :: Testing",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9"
 ]
 
 [tool.poetry.plugins.pytest11]
