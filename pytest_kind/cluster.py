@@ -136,7 +136,7 @@ class KindCluster:
         self.ensure_kubectl()
         return subprocess.check_output(
             [str(self.kubectl_path), *args],
-            env={"KUBECONFIG": str(self.kubeconfig_path)},
+            env={**os.environ, "KUBECONFIG": str(self.kubeconfig_path)},
             encoding="utf-8",
             **kwargs,
         )
