@@ -15,8 +15,8 @@ import pykube
 import requests
 
 
-KIND_VERSION = "v0.10.0"
-KUBECTL_VERSION = "v1.20.2"
+KIND_VERSION = os.environ.get("KIND_VERSION", "v0.11.1")
+KUBECTL_VERSION = os.environ.get("KUBECTL_VERSION", "v1.22.2")
 
 
 class KindCluster:
@@ -34,8 +34,8 @@ class KindCluster:
         self.path = path / name
         self.path.mkdir(parents=True, exist_ok=True)
         self.kubeconfig_path = kubeconfig or (self.path / "kubeconfig")
-        self.kind_path = kind_path or (self.path / "kind")
-        self.kubectl_path = kubectl_path or (self.path / "kubectl")
+        self.kind_path = kind_path or (self.path / f"kind-{KIND_VERSION}")
+        self.kubectl_path = kubectl_path or (self.path / f"kubectl-{KUBECTL_VERSION}")
 
     def ensure_kind(self):
         if not self.kind_path.exists():
