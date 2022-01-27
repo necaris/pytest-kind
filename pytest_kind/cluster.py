@@ -3,7 +3,7 @@ import os
 import random
 import socket
 import subprocess
-import sys
+import platform
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -35,14 +35,17 @@ class KindCluster:
         self.path.mkdir(parents=True, exist_ok=True)
         self.kubeconfig_path = kubeconfig or (self.path / "kubeconfig")
         self.kind_path = kind_path or (self.path / f"kind-{KIND_VERSION}")
-        self.kubectl_path = kubectl_path or (self.path / f"kubectl-{KUBECTL_VERSION}")
+        self.platform = platform.system().lower()
+        if self.platform == "windows":
+            self.kubectl_path = kubectl_path or (self.path / f"kubectl-{KUBECTL_VERSION}.exe")
+        else:
+            self.kubectl_path = kubectl_path or (self.path / f"kubectl-{KUBECTL_VERSION}")
 
     def ensure_kind(self):
         if not self.kind_path.exists():
-            osname = sys.platform  # "linux" or "darwin"
             url = os.getenv(
                 "KIND_DOWNLOAD_URL",
-                f"https://github.com/kubernetes-sigs/kind/releases/download/{KIND_VERSION}/kind-{osname}-amd64",
+                f"https://github.com/kubernetes-sigs/kind/releases/download/{KIND_VERSION}/kind-{self.platform}-amd64",
             )
             logging.info(f"Downloading {url}..")
             tmp_file = self.kind_path.with_suffix(".tmp")
@@ -57,11 +60,16 @@ class KindCluster:
 
     def ensure_kubectl(self):
         if not self.kubectl_path.exists():
-            osname = sys.platform  # "linux" or "darwin"
-            url = os.getenv(
-                "KUBECTL_DOWNLOAD_URL",
-                f"https://storage.googleapis.com/kubernetes-release/release/{KUBECTL_VERSION}/bin/{osname}/amd64/kubectl",
-            )
+            if self.platform == "windows":
+                url = os.getenv(
+                    "KUBECTL_DOWNLOAD_URL",
+                    f"https://dl.k8s.io/release/{KUBECTL_VERSION}/bin/{self.platform}/amd64/kubectl.exe",
+                )
+            else:
+                url = os.getenv(
+                    "KUBECTL_DOWNLOAD_URL",
+                    f"https://dl.k8s.io/release/{KUBECTL_VERSION}/bin/{self.platform}/amd64/kubectl",
+                )
             logging.info(f"Downloading {url}..")
             tmp_file = self.kubectl_path.with_suffix(".tmp")
             with requests.get(url, stream=True) as r:
@@ -172,9 +180,7 @@ class KindCluster:
             returncode = proc.poll()
             if returncode is not None:
                 if i >= retries - 1:
-                    raise Exception(
-                        f"kubectl port-forward returned exit code {returncode}"
-                    )
+                    raise Exception(f"kubectl port-forward returned exit code {returncode}")
                 else:
                     # try again
                     continue
