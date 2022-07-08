@@ -1,9 +1,9 @@
 import logging
 import os
+import platform
 import random
 import socket
 import subprocess
-import platform
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -15,8 +15,8 @@ import pykube
 import requests
 
 
-KIND_VERSION = os.environ.get("KIND_VERSION", "v0.11.1")
-KUBECTL_VERSION = os.environ.get("KUBECTL_VERSION", "v1.22.2")
+KIND_VERSION = os.environ.get("KIND_VERSION", "v0.14.0")
+KUBECTL_VERSION = os.environ.get("KUBECTL_VERSION", "v1.24.2")
 
 
 class KindCluster:
@@ -37,9 +37,13 @@ class KindCluster:
         self.kind_path = kind_path or (self.path / f"kind-{KIND_VERSION}")
         self.platform = platform.system().lower()
         if self.platform == "windows":
-            self.kubectl_path = kubectl_path or (self.path / f"kubectl-{KUBECTL_VERSION}.exe")
+            self.kubectl_path = kubectl_path or (
+                self.path / f"kubectl-{KUBECTL_VERSION}.exe"
+            )
         else:
-            self.kubectl_path = kubectl_path or (self.path / f"kubectl-{KUBECTL_VERSION}")
+            self.kubectl_path = kubectl_path or (
+                self.path / f"kubectl-{KUBECTL_VERSION}"
+            )
 
     def ensure_kind(self):
         if not self.kind_path.exists():
@@ -180,7 +184,9 @@ class KindCluster:
             returncode = proc.poll()
             if returncode is not None:
                 if i >= retries - 1:
-                    raise Exception(f"kubectl port-forward returned exit code {returncode}")
+                    raise Exception(
+                        f"kubectl port-forward returned exit code {returncode}"
+                    )
                 else:
                     # try again
                     continue
