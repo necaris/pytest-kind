@@ -15,8 +15,8 @@ import pykube
 import requests
 
 
-KIND_VERSION = os.environ.get("KIND_VERSION", "v0.14.0")
-KUBECTL_VERSION = os.environ.get("KUBECTL_VERSION", "v1.24.2")
+KIND_VERSION = os.environ.get("KIND_VERSION", "v0.15.0")
+KUBECTL_VERSION = os.environ.get("KUBECTL_VERSION", "v1.25.0")
 
 
 class KindCluster:
