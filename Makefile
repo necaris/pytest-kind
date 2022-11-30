@@ -8,7 +8,7 @@ lint: install
 
 .PHONY: test
 test: lint
-	poetry run coverage run --source=pytest_kind -m py.test tests/
+	poetry run coverage run --source=pytest_kind -m pytest tests/
 	poetry run coverage report
 
 .PHONY: test.local

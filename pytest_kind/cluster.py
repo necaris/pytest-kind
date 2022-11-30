@@ -15,8 +15,8 @@ import pykube
 import requests
 
 
-KIND_VERSION = os.environ.get("KIND_VERSION", "v0.15.0")
-KUBECTL_VERSION = os.environ.get("KUBECTL_VERSION", "v1.25.0")
+KIND_VERSION = os.environ.get("KIND_VERSION", "v0.17.0")
+KUBECTL_VERSION = os.environ.get("KUBECTL_VERSION", "v1.25.3")
 
 
 class KindCluster:
@@ -85,7 +85,7 @@ class KindCluster:
             tmp_file.chmod(0o755)
             tmp_file.rename(self.kubectl_path)
 
-    def create(self, config_file: Union[str, Path] = None):
+    def create(self, config_file: Optional[Union[str, Path]] = None):
         """Create the kind cluster if it does not exist (otherwise re-use)."""
         self.ensure_kind()
 
@@ -159,7 +159,7 @@ class KindCluster:
         service_or_pod_name: str,
         remote_port: int,
         *args,
-        local_port: int = None,
+        local_port: Optional[int] = None,
         retries: int = 10,
     ) -> Generator[int, None, None]:
         """Run "kubectl port-forward" for the given service/pod and use a random local port."""
