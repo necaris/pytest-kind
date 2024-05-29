@@ -1,16 +1,19 @@
 import subprocess
 
+from pytest_kind.cluster import _DEFAULT_KUBECTL_VERSION
+
 
 def test_kind_cluster(testdir):
+    k8s_version_tuple = ("1", "30")
     testdir.makepyfile(
-        """
+        f"""
     import socket
 
     def test_cluster_api(kind_cluster):
-        assert kind_cluster.api.version == ('1', '25')
+        assert kind_cluster.api.version == {k8s_version_tuple!r}
 
     def test_kubectl_version(kind_cluster):
-        assert "v1.25" in kind_cluster.kubectl("version")
+        assert "{_DEFAULT_KUBECTL_VERSION}" in kind_cluster.kubectl("version")
 
     def test_load_docker_image(kind_cluster):
         kind_cluster.load_docker_image("busybox")
