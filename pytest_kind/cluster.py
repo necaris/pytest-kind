@@ -35,7 +35,6 @@ class KindCluster:
         self.path.mkdir(parents=True, exist_ok=True)
         self.kubeconfig_path = kubeconfig or (self.path / "kubeconfig")
         self.kind_path = kind_path or (self.path / f"kind-{KIND_VERSION}")
-        self.platform = platform.system().lower()
         if self.platform == "windows":
             self.kubectl_path = kubectl_path or (
                 self.path / f"kubectl-{KUBECTL_VERSION}.exe"
@@ -44,12 +43,19 @@ class KindCluster:
             self.kubectl_path = kubectl_path or (
                 self.path / f"kubectl-{KUBECTL_VERSION}"
             )
+    @property
+    def platform(self):
+        return platform.system().lower()
+
+    @property
+    def go_arch(self):
+        return "amd64" if platform.machine() == "x86_64" else platform.machine()
 
     def ensure_kind(self):
         if not self.kind_path.exists():
             url = os.getenv(
                 "KIND_DOWNLOAD_URL",
-                f"https://github.com/kubernetes-sigs/kind/releases/download/{KIND_VERSION}/kind-{self.platform}-amd64",
+                f"https://github.com/kubernetes-sigs/kind/releases/download/{KIND_VERSION}/kind-{self.platform}-{self.go_arch}",
             )
             logging.info(f"Downloading {url}..")
             tmp_file = self.kind_path.with_suffix(".tmp")
@@ -64,16 +70,11 @@ class KindCluster:
 
     def ensure_kubectl(self):
         if not self.kubectl_path.exists():
-            if self.platform == "windows":
-                url = os.getenv(
-                    "KUBECTL_DOWNLOAD_URL",
-                    f"https://dl.k8s.io/release/{KUBECTL_VERSION}/bin/{self.platform}/amd64/kubectl.exe",
-                )
-            else:
-                url = os.getenv(
-                    "KUBECTL_DOWNLOAD_URL",
-                    f"https://dl.k8s.io/release/{KUBECTL_VERSION}/bin/{self.platform}/amd64/kubectl",
-                )
+            suffix = ".exe" if self.platform == "windows" else ""
+            url = os.getenv(
+                "KUBECTL_DOWNLOAD_URL",
+                f"https://dl.k8s.io/release/{KUBECTL_VERSION}/bin/{self.platform}/{self.go_arch}/kubectl{suffix}",
+            )
             logging.info(f"Downloading {url}..")
             tmp_file = self.kubectl_path.with_suffix(".tmp")
             with requests.get(url, stream=True) as r:
