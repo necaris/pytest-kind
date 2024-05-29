@@ -15,8 +15,21 @@ import pykube
 import requests
 
 
-KIND_VERSION = os.environ.get("KIND_VERSION", "v0.17.0")
-KUBECTL_VERSION = os.environ.get("KUBECTL_VERSION", "v1.25.3")
+_DEFAULT_KIND_VERSION = "v0.23.0"
+_DEFAULT_KUBECTL_VERSION = "v1.28.9"
+
+
+def download_to_path(url: str, path: Path, umask: int | None = None):
+    tmp_file = path.with_suffix(".tmp")
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        with tmp_file.open("wb") as fd:
+            for chunk in r.iter_content(chunk_size=8192):
+                if chunk:
+                    fd.write(chunk)
+    if umask:
+        tmp_file.chmod(umask)
+    tmp_file.rename(path)
 
 
 class KindCluster:
@@ -27,6 +40,13 @@ class KindCluster:
         image: Optional[str] = None,
         kind_path: Optional[Path] = None,
         kubectl_path: Optional[Path] = None,
+        *,
+        kind_version: Optional[str] = os.environ.get(
+            "KIND_VERSION", _DEFAULT_KIND_VERSION
+        ),
+        kubectl_version: Optional[str] = os.environ.get(
+            "KUBECTL_VERSION", _DEFAULT_KUBECTL_VERSION
+        ),
     ):
         self.name = name
         self.image = image
@@ -34,13 +54,15 @@ class KindCluster:
         self.path = path / name
         self.path.mkdir(parents=True, exist_ok=True)
         self.kubeconfig_path = kubeconfig or (self.path / "kubeconfig")
-        self.kind_path = kind_path or (self.path / f"kind-{KIND_VERSION}")
+        self.kind_version = kind_version or _DEFAULT_KIND_VERSION
+        self.kind_path = kind_path or (self.path / f"kind-{self.kind_version}")
+        self.kubectl_version = kubectl_version or _DEFAULT_KUBECTL_VERSION
         if self.platform == "windows" and not kubectl_path:
             _suffix = ".exe"
         else:
             _suffix = ""
         self.kubectl_path = kubectl_path or (
-            self.path / f"kubectl-{KUBECTL_VERSION}{_suffix}"
+            self.path / f"kubectl-{self.kubectl_version}{_suffix}"
         )
 
     @property
@@ -51,40 +73,28 @@ class KindCluster:
     def go_arch(self):
         return "amd64" if platform.machine() == "x86_64" else platform.machine()
 
+    def _kind_download_url(self):
+        return os.environ.get(
+            "KIND_DOWNLOAD_URL",
+            f"https://github.com/kubernetes-sigs/kind/releases/download/{self.kind_version}/kind-{self.platform}-{self.go_arch}",
+        )
+
+    def _kubectl_download_url(self):
+        suffix = ".exe" if self.platform == "windows" else ""
+        return os.environ.get(
+            "KUBECTL_DOWNLOAD_URL",
+            f"https://dl.k8s.io/release/{self.kubectl_version}/bin/{self.platform}/{self.go_arch}/kubectl{suffix}",
+        )
+
     def ensure_kind(self):
         if not self.kind_path.exists():
-            url = os.getenv(
-                "KIND_DOWNLOAD_URL",
-                f"https://github.com/kubernetes-sigs/kind/releases/download/{KIND_VERSION}/kind-{self.platform}-{self.go_arch}",
-            )
-            logging.info(f"Downloading {url}..")
-            tmp_file = self.kind_path.with_suffix(".tmp")
-            with requests.get(url, stream=True) as r:
-                r.raise_for_status()
-                with tmp_file.open("wb") as fd:
-                    for chunk in r.iter_content(chunk_size=8192):
-                        if chunk:
-                            fd.write(chunk)
-            tmp_file.chmod(0o755)
-            tmp_file.rename(self.kind_path)
+            logging.info("Downloading %s...", self._kind_download_url())
+            download_to_path(self._kind_download_url(), self.kind_path, umask=0o755)
 
     def ensure_kubectl(self):
         if not self.kubectl_path.exists():
-            suffix = ".exe" if self.platform == "windows" else ""
-            url = os.getenv(
-                "KUBECTL_DOWNLOAD_URL",
-                f"https://dl.k8s.io/release/{KUBECTL_VERSION}/bin/{self.platform}/{self.go_arch}/kubectl{suffix}",
-            )
-            logging.info(f"Downloading {url}..")
-            tmp_file = self.kubectl_path.with_suffix(".tmp")
-            with requests.get(url, stream=True) as r:
-                r.raise_for_status()
-                with tmp_file.open("wb") as fd:
-                    for chunk in r.iter_content(chunk_size=8192):
-                        if chunk:
-                            fd.write(chunk)
-            tmp_file.chmod(0o755)
-            tmp_file.rename(self.kubectl_path)
+            logging.info("Downloading %s...", self._kubectl_download_url())
+            download_to_path(self._kubectl_download_url(), self.kubectl_path, umask=0o755)
 
     def create(self, config_file: Optional[Union[str, Path]] = None):
         """Create the kind cluster if it does not exist (otherwise re-use)."""
