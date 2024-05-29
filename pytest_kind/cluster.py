@@ -35,14 +35,14 @@ class KindCluster:
         self.path.mkdir(parents=True, exist_ok=True)
         self.kubeconfig_path = kubeconfig or (self.path / "kubeconfig")
         self.kind_path = kind_path or (self.path / f"kind-{KIND_VERSION}")
-        if self.platform == "windows":
-            self.kubectl_path = kubectl_path or (
-                self.path / f"kubectl-{KUBECTL_VERSION}.exe"
-            )
+        if self.platform == "windows" and not kubectl_path:
+            _suffix = ".exe"
         else:
-            self.kubectl_path = kubectl_path or (
-                self.path / f"kubectl-{KUBECTL_VERSION}"
-            )
+            _suffix = ""
+        self.kubectl_path = kubectl_path or (
+            self.path / f"kubectl-{KUBECTL_VERSION}{_suffix}"
+        )
+
     @property
     def platform(self):
         return platform.system().lower()
